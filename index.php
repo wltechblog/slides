@@ -26,7 +26,14 @@ session_start();
 define('BASE_DIR', __DIR__);
 define('SLIDESHOWS_DIR', BASE_DIR . '/slideshows');
 define('PUBLIC_DIR', BASE_DIR . '/public');
-define('ADMIN_PASSWORD', 'your-secure-password-here');
+
+$config = [];
+$configFile = BASE_DIR . '/config.php';
+if (file_exists($configFile)) {
+    $config = include $configFile;
+}
+
+define('ADMIN_PASSWORD', $config['admin_password'] ?? null);
 
 if (!is_dir(SLIDESHOWS_DIR)) {
     mkdir(SLIDESHOWS_DIR, 0755, true);

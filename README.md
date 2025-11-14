@@ -25,23 +25,55 @@ A simple PHP-based slideshow maker and display tool. Create, edit, and share sli
    cd slides
    ```
 
-2. **Create slideshows directory**:
+2. **Create the configuration file**:
+   ```bash
+   cp config.example.php config.php
+   ```
+
+3. **Edit the configuration file**:
+   ```bash
+   nano config.php
+   ```
+   Set a strong admin password in the `admin_password` field.
+
+4. **Create slideshows directory**:
    ```bash
    mkdir slideshows
    chmod 755 slideshows
    ```
 
-3. **Configure your web server** (see deployment section below)
+5. **Configure your web server** (see deployment section below)
 
 ## Configuration
 
-Before deployment, edit `index.php` and set a password for creation/editing:
+Configuration is managed through the `config.php` file. Copy `config.example.php` to `config.php` and customize as needed:
 
 ```php
-define('ADMIN_PASSWORD', 'your-secure-password-here');
+return [
+    'admin_password' => 'your-secure-password-here',
+];
 ```
 
-Optional: Set `ADMIN_PASSWORD` to `null` to disable authentication (not recommended for production).
+### Configuration Options
+
+- **admin_password**: Password required for creating, editing, and deleting slideshows. Set to `null` to disable authentication (not recommended for production).
+
+### Environment Variables (Optional)
+
+For enhanced security in production environments, use environment variables instead of hardcoding credentials:
+
+```php
+return [
+    'admin_password' => $_ENV['SLIDES_ADMIN_PASSWORD'] ?? null,
+];
+```
+
+Then set the environment variable:
+```bash
+export SLIDES_ADMIN_PASSWORD='your-secure-password-here'
+```
+
+**Note:** `config.php` is automatically excluded from git and should never be committed to version control.
 
 ## Deployment
 
@@ -183,8 +215,9 @@ Slideshows are stored as JSON in the `slideshows/` directory:
 - For Nginx: Check your server configuration for the rewrite rules
 
 ### Password not working
-- Verify `ADMIN_PASSWORD` is set in `index.php`
+- Verify `config.php` exists and contains a valid `admin_password` entry
 - Check that SESSION support is enabled in PHP
+- Ensure `config.php` is not excluded from your deployment
 
 ## License
 

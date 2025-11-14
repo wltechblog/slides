@@ -7,3 +7,4 @@ vendor/
 .idea/
 slideshows/
 .zencoder
+config.php
