@@ -50,11 +50,18 @@ Configuration is managed through the `config.php` file. Copy `config.example.php
 
 ```php
 return [
+    'base_url' => '/',
     'admin_password' => 'your-secure-password-here',
 ];
 ```
 
 ### Configuration Options
+
+- **base_url**: Base URL path for the application. Use this if the application is installed in a subdirectory. Default is `/` for root installation. Examples:
+  - `/` - Application at root (default)
+  - `/slides` - Application at `example.com/slides/`
+  - `/tools/slides` - Application at `example.com/tools/slides/`
+  - Leave as empty string (`''`) to auto-detect (may not work reliably in all setups)
 
 - **admin_password**: Password required for creating, editing, and deleting slideshows. Set to `null` to disable authentication (not recommended for production).
 
@@ -74,6 +81,19 @@ export SLIDES_ADMIN_PASSWORD='your-secure-password-here'
 ```
 
 **Note:** `config.php` is automatically excluded from git and should never be committed to version control.
+
+### Subdirectory Installation
+
+If you're installing Slides in a subdirectory (not at the root), set the `base_url` config option:
+
+```php
+return [
+    'base_url' => '/slides',
+    'admin_password' => 'your-secure-password-here',
+];
+```
+
+This ensures all URLs, links, and redirects work correctly. Without this setting, the application will attempt to auto-detect the base path, but explicit configuration is more reliable.
 
 ## Deployment
 

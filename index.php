@@ -33,6 +33,19 @@ if (file_exists($configFile)) {
     $config = include $configFile;
 }
 
+$baseUrl = $config['base_url'] ?? '';
+if ($baseUrl === '') {
+    $baseUrl = dirname($_SERVER['SCRIPT_NAME']);
+    if ($baseUrl !== '/') {
+        $baseUrl = rtrim($baseUrl, '/');
+    }
+}
+if ($baseUrl === '' || $baseUrl === '.') {
+    $baseUrl = '/';
+}
+$baseUrl = rtrim($baseUrl, '/');
+
+define('BASE_URL', $baseUrl);
 define('ADMIN_PASSWORD', $config['admin_password'] ?? null);
 
 if (!is_dir(SLIDESHOWS_DIR)) {
@@ -40,9 +53,11 @@ if (!is_dir(SLIDESHOWS_DIR)) {
 }
 
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$base_path = dirname($_SERVER['SCRIPT_NAME']);
-if ($base_path !== '/') {
-    $request_uri = substr($request_uri, strlen($base_path));
+
+if (BASE_URL !== '/') {
+    if (strpos($request_uri, BASE_URL) === 0) {
+        $request_uri = substr($request_uri, strlen(BASE_URL));
+    }
 }
 
 $request_uri = trim($request_uri, '/');
@@ -183,8 +198,8 @@ function handleHome(): void
                     <div class="slideshow-card">
                         <h3><?php echo htmlspecialchars($slideshow['title'] ?? 'Untitled'); ?></h3>
                         <div class="actions">
-                            <a href="/play/<?php echo htmlspecialchars($slug); ?>">Play</a>
-                            <a href="/edit/<?php echo htmlspecialchars($slug); ?>">Edit</a>
+                            <a href="<?php echo BASE_URL; ?>/play/<?php echo htmlspecialchars($slug); ?>">Play</a>
+                            <a href="<?php echo BASE_URL; ?>/edit/<?php echo htmlspecialchars($slug); ?>">Edit</a>
                             <button class="delete-btn" onclick="deleteSlideshow('<?php echo htmlspecialchars($slug); ?>')">Delete</button>
                         </div>
                     </div>
@@ -193,17 +208,19 @@ function handleHome(): void
         </div>
         
         <script>
+            const baseUrl = '<?php echo BASE_URL; ?>';
+            
             function createNewSlideshow() {
                 const title = prompt('Enter slideshow title:');
                 if (title) {
                     const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                    window.location.href = '/edit/' + slug;
+                    window.location.href = baseUrl + '/edit/' + slug;
                 }
             }
             
             function deleteSlideshow(slug) {
                 if (confirm('Are you sure you want to delete this slideshow?')) {
-                    fetch('/api/delete/' + slug, { method: 'POST' })
+                    fetch(baseUrl + '/api/delete/' + slug, { method: 'POST' })
                         .then(r => location.reload());
                 }
             }
@@ -248,7 +265,7 @@ function handlePlay(string $slug): void
         </style>
     </head>
     <body>
-        <a href="/" class="home-btn">← Home</a>
+        <a href="<?php echo BASE_URL; ?>" class="home-btn">← Home</a>
         <div class="slide-counter"><span id="current">1</span> / <span id="total"><?php echo count($slides); ?></span></div>
         
         <?php foreach ($slides as $index => $slide): ?>
@@ -395,13 +412,14 @@ function handleEdit(string $slug): void
                         <button type="button" onclick="saveSlideshow()">Save</button>
                         <button type="button" onclick="playSlideshow()">Play</button>
                         <button type="button" class="delete-slide-btn" onclick="deleteSlide()" id="deleteSlideBtn" style="display: <?php echo count($slides) > 0 ? 'block' : 'none'; ?>">Delete Slide</button>
-                        <a href="/" style="padding: 10px 20px; text-decoration: none; background-color: #6c757d; color: white; border-radius: 4px; display: flex; align-items: center;">Home</a>
+                        <a href="<?php echo BASE_URL; ?>" style="padding: 10px 20px; text-decoration: none; background-color: #6c757d; color: white; border-radius: 4px; display: flex; align-items: center;">Home</a>
                     </div>
                 </form>
             </div>
         </div>
         
         <script>
+            const baseUrl = '<?php echo BASE_URL; ?>';
             const slug = '<?php echo htmlspecialchars($slug); ?>';
             let slides = <?php echo json_encode($slides); ?>;
             let currentSlideIndex = 0;
@@ -476,7 +494,7 @@ function handleEdit(string $slug): void
                     slides: slides
                 };
                 
-                fetch('/api/save-slideshow', {
+                fetch(baseUrl + '/api/save-slideshow', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -485,7 +503,7 @@ function handleEdit(string $slug): void
             
             function playSlideshow() {
                 saveSlideshow();
-                setTimeout(() => window.location.href = '/play/' + slug, 500);
+                setTimeout(() => window.location.href = baseUrl + '/play/' + slug, 500);
             }
         </script>
     </body>
