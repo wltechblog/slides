@@ -120,6 +120,46 @@ This ensures all URLs, links, and redirects work correctly. Without this setting
 
 3. **.htaccess** is included in the project for URL rewriting.
 
+#### Subdirectory Installation with WordPress or Other Apps
+
+If Slides is installed in a subdirectory (e.g., `/slides/`) alongside WordPress at the root, you need to prevent WordPress from intercepting Slides requests.
+
+**Option A: Exclude Slides directory from WordPress (Recommended)**
+
+Edit WordPress's `.htaccess` at the root and add this BEFORE the WordPress rules:
+
+```apache
+# Exclude /slides directory from WordPress routing
+<IfModule mod_rewrite.c>
+    RewriteRule ^slides(/.*)?$ - [L]
+</IfModule>
+
+# ... rest of WordPress .htaccess ...
+```
+
+**Option B: Update Slides' .htaccess for subdirectories**
+
+If the above doesn't work, modify `.htaccess` in the `/slides/` directory:
+
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /slides/
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+```
+
+Make sure to set `base_url` in `config.php`:
+```php
+return [
+    'base_url' => '/slides',
+    'admin_password' => 'your-password',
+];
+```
+
 ### Nginx
 
 1. **Configure Nginx**:
@@ -231,7 +271,9 @@ Slideshows are stored as JSON in the `slideshows/` directory:
 - Verify PHP has write permissions: `chmod 755 slideshows/`
 
 ### URLs not rewriting properly
-- For Apache: Ensure `mod_rewrite` is enabled and `.htaccess` is in the root
+- For Apache: Ensure `mod_rewrite` is enabled and `.htaccess` is in the Slides directory
+- If using a subdirectory with WordPress or another app: See "Subdirectory Installation with WordPress or Other Apps" in the Apache section
+- Use `.htaccess.subdirectory` as a template if needed and update `RewriteBase` to match your path
 - For Nginx: Check your server configuration for the rewrite rules
 
 ### Password not working

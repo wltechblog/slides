@@ -1,0 +1,13 @@
+# Use this .htaccess if Slides is installed in a subdirectory alongside another app like WordPress
+# 1. Rename this file to .htaccess (or copy contents to .htaccess)
+# 2. Update the RewriteBase to match your subdirectory path
+# 3. Update config.php to set base_url accordingly
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /slides/
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>

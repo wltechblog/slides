@@ -395,17 +395,15 @@ function handleEdit(string $slug): void
                     </div>
                     
                     <div id="slideContent">
-                        <?php if (count($slides) > 0): ?>
-                            <?php $slide = $slides[0]; ?>
-                            <div class="form-group">
-                                <label for="slideImage">Image URL</label>
-                                <input type="url" id="slideImage" value="<?php echo htmlspecialchars($slide['image'] ?? ''); ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="slideText">Text</label>
-                                <textarea id="slideText"><?php echo htmlspecialchars($slide['text'] ?? ''); ?></textarea>
-                            </div>
-                        <?php endif; ?>
+                        <?php $slide = count($slides) > 0 ? $slides[0] : ['image' => '', 'text' => '']; ?>
+                        <div class="form-group">
+                            <label for="slideImage">Image URL</label>
+                            <input type="url" id="slideImage" value="<?php echo htmlspecialchars($slide['image'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="slideText">Text</label>
+                            <textarea id="slideText"><?php echo htmlspecialchars($slide['text'] ?? ''); ?></textarea>
+                        </div>
                     </div>
                     
                     <div class="buttons">
