@@ -347,8 +347,13 @@ function handleEdit(string $slug): void
             .logout-btn:hover { background-color: #5a6268; }
             .sidebar-content { flex: 1; overflow-y: auto; }
             .slide-list { list-style: none; }
-            .slide-item { padding: 10px; margin-bottom: 10px; background-color: #444; border-radius: 4px; cursor: pointer; }
-            .slide-item.active { background-color: #007bff; }
+            .slide-item { padding: 10px; margin-bottom: 10px; background-color: #444; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; }
+            .slide-item-title { flex: 1; cursor: pointer; }
+            .slide-item.active .slide-item-title { background-color: #007bff; padding: 5px; border-radius: 3px; }
+            .slide-item-buttons { display: flex; gap: 4px; }
+            .slide-item-btn { padding: 4px 8px; background-color: #555; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; }
+            .slide-item-btn:hover { background-color: #666; }
+            .slide-item-btn:disabled { background-color: #333; cursor: not-allowed; }
             .add-slide-btn { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
             .add-slide-btn:hover { background-color: #218838; }
             .content { flex: 1; padding: 40px; overflow-y: auto; }
@@ -379,8 +384,12 @@ function handleEdit(string $slug): void
                     <button class="add-slide-btn" onclick="addSlide()">+ Add Slide</button>
                     <ul class="slide-list" id="slideList">
                         <?php foreach ($slides as $index => $slide): ?>
-                            <li class="slide-item <?php echo $index === 0 ? 'active' : ''; ?>" onclick="selectSlide(<?php echo $index; ?>)">
-                                Slide <?php echo $index + 1; ?>
+                            <li class="slide-item <?php echo $index === 0 ? 'active' : ''; ?>" data-index="<?php echo $index; ?>">
+                                <span class="slide-item-title">Slide <?php echo $index + 1; ?></span>
+                                <div class="slide-item-buttons">
+                                    <button type="button" class="slide-item-btn slide-up-btn" <?php echo $index === 0 ? 'disabled' : ''; ?>>▲</button>
+                                    <button type="button" class="slide-item-btn slide-down-btn" <?php echo $index === count($slides) - 1 ? 'disabled' : ''; ?>>▼</button>
+                                </div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -422,37 +431,65 @@ function handleEdit(string $slug): void
             let slides = <?php echo json_encode($slides); ?>;
             let currentSlideIndex = 0;
             
-            function selectSlide(index) {
+            const slideList = document.getElementById('slideList');
+            
+            function getCurrentSlideIndex() {
+                const items = document.querySelectorAll('.slide-item');
+                return Array.from(items).findIndex(el => el.classList.contains('active'));
+            }
+            
+            function getSlideIndexByElement(el) {
+                const items = document.querySelectorAll('.slide-item');
+                return Array.from(items).indexOf(el);
+            }
+            
+            function saveCurrentSlide() {
                 if (currentSlideIndex < slides.length) {
                     slides[currentSlideIndex].image = document.getElementById('slideImage').value;
                     slides[currentSlideIndex].text = document.getElementById('slideText').value;
                 }
+            }
+            
+            function selectSlide(index) {
+                saveCurrentSlide();
                 
-                currentSlideIndex = index;
-                const slide = slides[index] || { image: '', text: '' };
+                currentSlideIndex = Math.max(0, Math.min(index, slides.length - 1));
+                const slide = slides[currentSlideIndex] || { image: '', text: '' };
                 
                 document.getElementById('slideImage').value = slide.image || '';
                 document.getElementById('slideText').value = slide.text || '';
                 
                 document.querySelectorAll('.slide-item').forEach((el, i) => {
-                    el.classList.toggle('active', i === index);
+                    el.classList.toggle('active', i === currentSlideIndex);
+                });
+            }
+            
+            function updateSlideList() {
+                const items = document.querySelectorAll('.slide-item');
+                items.forEach((el, i) => {
+                    el.querySelector('.slide-item-title').textContent = 'Slide ' + (i + 1);
+                    el.querySelector('.slide-up-btn').disabled = i === 0;
+                    el.querySelector('.slide-down-btn').disabled = i === slides.length - 1;
                 });
             }
             
             function addSlide() {
-                if (currentSlideIndex < slides.length) {
-                    slides[currentSlideIndex].image = document.getElementById('slideImage').value;
-                    slides[currentSlideIndex].text = document.getElementById('slideText').value;
-                }
+                saveCurrentSlide();
                 
                 slides.push({ image: '', text: '' });
                 currentSlideIndex = slides.length - 1;
                 
                 const li = document.createElement('li');
                 li.className = 'slide-item active';
-                li.textContent = 'Slide ' + slides.length;
-                li.onclick = () => selectSlide(slides.length - 1);
-                document.getElementById('slideList').appendChild(li);
+                li.setAttribute('data-index', currentSlideIndex);
+                li.innerHTML = `
+                    <span class="slide-item-title">Slide ${slides.length}</span>
+                    <div class="slide-item-buttons">
+                        <button type="button" class="slide-item-btn slide-up-btn" disabled>▲</button>
+                        <button type="button" class="slide-item-btn slide-down-btn" disabled>▼</button>
+                    </div>
+                `;
+                slideList.appendChild(li);
                 
                 document.getElementById('slideImage').value = '';
                 document.getElementById('slideText').value = '';
@@ -461,6 +498,8 @@ function handleEdit(string $slug): void
                 document.querySelectorAll('.slide-item').forEach((el, i) => {
                     el.classList.toggle('active', i === currentSlideIndex);
                 });
+                
+                updateSlideList();
             }
             
             function deleteSlide() {
@@ -469,22 +508,45 @@ function handleEdit(string $slug): void
                     return;
                 }
                 
+                saveCurrentSlide();
                 slides.splice(currentSlideIndex, 1);
                 document.querySelectorAll('.slide-item')[currentSlideIndex]?.remove();
                 
                 currentSlideIndex = Math.min(currentSlideIndex, slides.length - 1);
                 selectSlide(currentSlideIndex);
+                updateSlideList();
                 
                 if (slides.length === 0) {
                     document.getElementById('deleteSlideBtn').style.display = 'none';
                 }
             }
             
-            function saveSlideshow() {
-                if (currentSlideIndex < slides.length) {
-                    slides[currentSlideIndex].image = document.getElementById('slideImage').value;
-                    slides[currentSlideIndex].text = document.getElementById('slideText').value;
+            function moveSlide(direction) {
+                saveCurrentSlide();
+                
+                const newIndex = direction === 'up' ? currentSlideIndex - 1 : currentSlideIndex + 1;
+                
+                if (newIndex < 0 || newIndex >= slides.length) return;
+                
+                [slides[currentSlideIndex], slides[newIndex]] = [slides[newIndex], slides[currentSlideIndex]];
+                
+                const items = Array.from(document.querySelectorAll('.slide-item'));
+                const currentItem = items[currentSlideIndex];
+                const targetItem = items[newIndex];
+                
+                if (direction === 'up') {
+                    targetItem.parentNode.insertBefore(currentItem, targetItem);
+                } else {
+                    targetItem.parentNode.insertBefore(targetItem, currentItem);
                 }
+                
+                currentSlideIndex = newIndex;
+                selectSlide(currentSlideIndex);
+                updateSlideList();
+            }
+            
+            function saveSlideshow() {
+                saveCurrentSlide();
                 
                 const data = {
                     slug: slug,
@@ -503,6 +565,26 @@ function handleEdit(string $slug): void
                 saveSlideshow();
                 setTimeout(() => window.location.href = baseUrl + '/play/' + slug, 500);
             }
+            
+            slideList.addEventListener('click', function(e) {
+                const title = e.target.closest('.slide-item-title');
+                const upBtn = e.target.closest('.slide-up-btn');
+                const downBtn = e.target.closest('.slide-down-btn');
+                
+                if (title) {
+                    const item = title.closest('.slide-item');
+                    const index = getSlideIndexByElement(item);
+                    selectSlide(index);
+                } else if (upBtn) {
+                    e.preventDefault();
+                    moveSlide('up');
+                } else if (downBtn) {
+                    e.preventDefault();
+                    moveSlide('down');
+                }
+            });
+            
+            updateSlideList();
         </script>
     </body>
     </html>
