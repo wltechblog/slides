@@ -325,7 +325,7 @@ function handleEdit(string $slug): void
 {
     $slideshow = loadSlideshow($slug);
     if (!$slideshow) {
-        $slideshow = ['title' => ucwords(str_replace('-', ' ', $slug)), 'slides' => []];
+        $slideshow = ['title' => ucwords(str_replace('-', ' ', $slug)), 'slides' => [['image' => '', 'text' => '']]];
     }
     
     $slides = $slideshow['slides'] ?? [];
