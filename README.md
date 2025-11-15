@@ -4,7 +4,7 @@ A simple PHP-based slideshow maker and display tool. Create, edit, and share sli
 
 ## Features
 
-- **Create & Edit Slideshows**: Full WYSIWYG editor with password protection
+- **Create & Edit Slideshows**: Simple editor with password protection
 - **Beautiful Playback**: White background with images on the left (scaled to fit) and text on the right
 - **Navigation**: Arrow keys or button navigation between slides
 - **Public Sharing**: Play any slideshow without authentication
@@ -124,22 +124,7 @@ This ensures all URLs, links, and redirects work correctly. Without this setting
 
 If Slides is installed in a subdirectory (e.g., `/slides/`) alongside WordPress at the root, you need to prevent WordPress from intercepting Slides requests.
 
-**Option A: Exclude Slides directory from WordPress (Recommended)**
-
-Edit WordPress's `.htaccess` at the root and add this BEFORE the WordPress rules:
-
-```apache
-# Exclude /slides directory from WordPress routing
-<IfModule mod_rewrite.c>
-    RewriteRule ^slides(/.*)?$ - [L]
-</IfModule>
-
-# ... rest of WordPress .htaccess ...
-```
-
-**Option B: Update Slides' .htaccess for subdirectories**
-
-If the above doesn't work, modify `.htaccess` in the `/slides/` directory:
+Modify `.htaccess` in the `/slides/` directory:
 
 ```apache
 <IfModule mod_rewrite.c>
@@ -187,27 +172,6 @@ return [
 
 2. **Remove .htaccess** (not needed for Nginx).
 
-### Docker
-
-Create a `Dockerfile`:
-```dockerfile
-FROM php:8.0-apache
-
-RUN a2enmod rewrite
-
-COPY . /var/www/html/
-
-RUN chown -R www-data:www-data /var/www/html/slideshows && \
-    chmod 755 /var/www/html/slideshows
-
-EXPOSE 80
-```
-
-Build and run:
-```bash
-docker build -t slides .
-docker run -p 80:80 -v slideshows_volume:/var/www/html/slideshows slides
-```
 
 ## Usage
 
